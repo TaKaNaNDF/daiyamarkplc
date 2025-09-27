@@ -60,90 +60,19 @@
         }
 
         .diamond-display {
-            width: 120px;
-            height: 120px;
+            width: 150px;
+            height: 150px;
             margin: 1.5em auto;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #777; /* 画像の背景色に合わせて調整 */
-            border-radius: 8px; /* 角を少し丸める */
         }
         
-        /* CSSでダイヤマークを表現 */
-        .diamond {
-            width: 50px; /* 基本サイズ */
-            height: 50px;
-            position: relative;
-            transform: rotate(45deg); /* 基本のダイヤ型に回転 */
+        #diamond-image {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
         }
-
-        /* id: 1 の新しいスタイル */
-        .d-1 { 
-            width: 60px; /* サイズ調整 */
-            height: 60px;
-            background-color: transparent; /* 背景は透過 */
-            border: none; /* 外側の線はなし */
-        }
-        .d-1::before,
-        .d-1::after {
-            content: '';
-            position: absolute;
-            background-color: white; /* 白い部分 */
-            transform: skew(-15deg, -15deg); /* 傾きを調整 */
-            width: 25px; /* 帯の幅 */
-            height: 85px; /* 帯の長さ */
-            top: -12px;
-        }
-        .d-1::before {
-            left: 5px; /* 左側の帯の位置 */
-            transform: rotate(0deg) skew(20deg, 20deg);
-        }
-        .d-1::after {
-            left: 35px; /* 右側の帯の位置 */
-            transform: rotate(0deg) skew(20deg, 20deg);
-        }
-
-        /* その他のダイヤマークのスタイル (既存のスタイル) */
-        .d-0 { transform: rotate(45deg) scale(1.4); background-color: white; border: 2px solid #333;}
-        .d-2 { transform: rotate(45deg) skew(25deg, 25deg) scale(1.2); border-color: #666; background-color: white; border: 2px solid #333;}
-        .d-3 { transform: rotate(45deg) skew(15deg, 15deg) scale(1.3); border: 4px double #333; background-color: white;}
-        .d-4 { transform: rotate(45deg) skew(10deg, 10deg) scale(1.3); border: 4px double #444; background-color: white;}
-        .d-5 { border-style: solid; transform: rotate(45deg) skew(15deg, 15deg) scale(1.3); background-color: white; border: 2px solid #333;}
-        .d-6 { border-style: solid; transform: rotate(45deg) skew(25deg, 25deg) scale(1.2); background-color: white; border: 2px solid #333;}
-        .d-7 { border: 4px double #333; transform: rotate(45deg) skew(25deg, 25deg) scale(1.2); background-color: white;}
-        .d-8 { border-style: solid; transform: rotate(45deg) scale(1.0); background-color: white; border: 2px solid #333;}
-        .d-9 { border-style: solid; transform: rotate(45deg) scale(1.4); border-color: #007BFF; background-color: white; border: 2px solid #333;} /* 青森 */
-        .d-10 { transform: rotate(45deg) skew(20deg, 20deg) scale(1.25); background-color: white; border: 2px solid #333;}
-        .d-11 { border-style: solid; transform: rotate(45deg) skew(20deg, 20deg) scale(1.25); background-color: white; border: 2px solid #333;}
-        .d-12 { border: 4px double #333; transform: rotate(45deg) scale(1.4); background-color: white;}
-        .d-13 { border: 3px double #333; transform: rotate(45deg) skew(10deg, 10deg) scale(1.0); background-color: white;}
-        .d-14 { border-style: solid; transform: rotate(45deg) skew(10deg, 10deg) scale(1.3); background-color: white; border: 2px solid #333;}
-        .d-15 { border-style: solid; transform: rotate(45deg) scale(0.9); background-color: white; border: 2px solid #333;}
-        .d-16, .d-17 { transform: rotate(45deg) scale(1.4); background-color: white; border: 2px solid #333;}
-        .d-16::before, .d-17::before {
-            content: '';
-            position: absolute;
-            width: 60%;
-            height: 60%;
-            top: 20%;
-            left: 20%;
-            border: 2px solid #333;
-        }
-        .d-17 { border-width: 4px; background-color: white;}
-        .d-17::before { border-width: 1px;}
-
-        /* diamond-displayの背景色をid=1の画像に合わせて設定 */
-        #diamond-shape.d-1 {
-            background-color: transparent; /* ここはダイヤ自体なので透明に */
-        }
-        .diamond-display {
-            background-color: #6a6a6a; /* id=1の背景色 */
-        }
-        .diamond-display:not(.d-1-bg) {
-            background-color: transparent; /* id=1以外は通常の透明な背景 */
-        }
-
 
         #options {
             display: grid;
@@ -169,7 +98,7 @@
         
         .option:disabled {
             cursor: not-allowed;
-            opacity: 0.6; /* 回答済みのボタンを少し暗くする */
+            opacity: 0.6;
         }
 
         .option.correct {
@@ -210,14 +139,14 @@
     <div class="container">
         <div id="start-screen">
             <h1>ダイヤマーク練習用</h1>
-            <p>都道府県のダイヤマークを当てるクイズです。<br>全10問、がんばってください！</p>
+            <p>都道府県のダイヤマークの暗記用クイズ<br>全10問です</p>
             <button id="start-button" class="btn">開始</button>
         </div>
 
         <div id="quiz-screen">
             <h2 id="question-number"></h2>
             <div class="diamond-display">
-                <div id="diamond-shape"></div>
+                <img id="diamond-image" src="" alt="ダイヤマーク">
             </div>
             <div id="options"></div>
             <div id="feedback"></div>
@@ -233,27 +162,30 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-    
-        // クイズデータ
+        
+        // GitHubの画像ファイルに直接アクセスするための正しいベースURL
+        const imageUrlBase = 'https://raw.githubusercontent.com/TaKaNaNDF/daiyamarkplc/main/';
+
+        // クイズデータに画像URLを追加
         const quizData = [
-            { id: 0, prefs: ['北海道', '青森県', '秋田県', '岩手県', '山形県', '福島県', '東京都', '神奈川県', '福井県', '愛知県', '大阪府', '愛媛県', '福岡県', '長崎県', '宮崎県', '鹿児島県'] },
-            { id: 1, prefs: ['宮城県', '京都府', '兵庫県', '岡山県'] }, // このマークのスタイルを修正
-            { id: 2, prefs: ['三重県', '高知県'] },
-            { id: 3, prefs: ['群馬県', '千葉県', '岐阜県'] },
-            { id: 4, prefs: ['奈良県', '和歌山県'] },
-            { id: 5, prefs: ['栃木県', '茨城県', '埼玉県', '滋賀県', '沖縄県'] },
-            { id: 6, prefs: ['富山県', '大分県'] },
-            { id: 7, prefs: ['鳥取県', '島根県', '佐賀県'] },
-            { id: 8, prefs: ['香川県'] },
-            { id: 9, prefs: ['青森県'] }, // 青森（新）
-            { id: 10, prefs: ['広島県', '徳島県'] },
-            { id: 11, prefs: ['石川県', '熊本県'] },
-            { id: 12, prefs: ['山梨県', '長野県'] },
-            { id: 13, prefs: ['奈良県'] }, // 奈良（新）
-            { id: 14, prefs: ['茨城県', '新潟県'] }, // 茨城,新潟（新）
-            { id: 15, prefs: ['佐賀県'] }, // 佐賀（新）
-            { id: 16, prefs: ['静岡県'] },
-            { id: 17, prefs: ['長野県', '山口県', '愛知県', '鹿児島県'] }, // 長野,山口,愛知,鹿児島（新）
+            { id: 0, prefs: ['北海道', '青森県', '秋田県', '岩手県', '山形県', '福島県', '東京都', '神奈川県', '福井県', '愛知県', '大阪府', '愛媛県', '福岡県', '長崎県', '宮崎県', '鹿児島県'], imageUrl: `${imageUrlBase}daiya.png` },
+            { id: 1, prefs: ['宮城県', '京都府', '兵庫県', '岡山県'], imageUrl: `${imageUrlBase}daiya1.png` },
+            { id: 2, prefs: ['三重県', '高知県'], imageUrl: `${imageUrlBase}daiya2.png` },
+            { id: 3, prefs: ['群馬県', '千葉県', '岐阜県'], imageUrl: `${imageUrlBase}daiya3.png` },
+            { id: 4, prefs: ['奈良県', '和歌山県'], imageUrl: `${imageUrlBase}daiya4.png` },
+            { id: 5, prefs: ['栃木県', '茨城県', '埼玉県', '滋賀県', '沖縄県'], imageUrl: `${imageUrlBase}daiya5.png` },
+            { id: 6, prefs: ['富山県', '大分県'], imageUrl: `${imageUrlBase}daiya6.png` },
+            { id: 7, prefs: ['鳥取県', '島根県', '佐賀県'], imageUrl: `${imageUrlBase}daiya7.png` },
+            { id: 8, prefs: ['香川県'], imageUrl: `${imageUrlBase}daiya8.png` },
+            { id: 9, prefs: ['青森県'], imageUrl: `${imageUrlBase}daiya9.png` },
+            { id: 10, prefs: ['広島県', '徳島県'], imageUrl: `${imageUrlBase}daiya10.png` },
+            { id: 11, prefs: ['石川県', '熊本県'], imageUrl: `${imageUrlBase}daiya11.png` },
+            { id: 12, prefs: ['山梨県', '長野県'], imageUrl: `${imageUrlBase}daiya12.png` },
+            { id: 13, prefs: ['奈良県'], imageUrl: `${imageUrlBase}daiya13.png` },
+            { id: 14, prefs: ['茨城県', '新潟県'], imageUrl: `${imageUrlBase}daiya14.png` },
+            { id: 15, prefs: ['佐賀県'], imageUrl: `${imageUrlBase}daiya15.png` },
+            { id: 16, prefs: ['静岡県'], imageUrl: `${imageUrlBase}daiya16.png` },
+            { id: 17, prefs: ['長野県', '山口県', '愛知県', '鹿児島県'], imageUrl: `${imageUrlBase}daiya17.png` },
         ];
 
         const allPrefectures = Array.from(new Set(quizData.flatMap(item => item.prefs)));
@@ -265,11 +197,10 @@
         const startButton = document.getElementById('start-button');
         const retryButton = document.getElementById('retry-button');
         const questionNumberEl = document.getElementById('question-number');
-        const diamondShapeEl = document.getElementById('diamond-shape');
+        const diamondImageEl = document.getElementById('diamond-image'); 
         const optionsEl = document.getElementById('options');
         const feedbackEl = document.getElementById('feedback');
         const scoreEl = document.getElementById('score');
-        const diamondDisplayEl = document.querySelector('.diamond-display'); // diamond-display要素も取得
 
         // クイズの状態
         let score = 0;
@@ -308,21 +239,11 @@
 
             const questionData = availableQuestions.pop();
             currentCorrectAnswer = questionData.prefs[Math.floor(Math.random() * questionData.prefs.length)];
+            
+            diamondImageEl.src = questionData.imageUrl;
 
-            // ダイヤマーク表示
-            diamondShapeEl.className = `diamond d-${questionData.id}`;
-            // id:1 の場合のみ、diamond-displayの背景色を変更する
-            if (questionData.id === 1) {
-                diamondDisplayEl.style.backgroundColor = '#6a6a6a'; // 画像の背景色
-            } else {
-                diamondDisplayEl.style.backgroundColor = 'transparent'; // その他の場合は透明
-            }
-
-
-            // 問題番号表示
             questionNumberEl.textContent = `第${currentQuestionIndex}問`;
 
-            // 選択肢の生成
             const options = generateOptions(currentCorrectAnswer);
             options.forEach(option => {
                 const button = document.createElement('button');
@@ -333,28 +254,17 @@
             });
         }
         
-        // 選択肢を生成（正解1つ＋不正解3つ）
         function generateOptions(correctAnswer) {
             let options = [correctAnswer];
             let dummies = allPrefectures.filter(pref => pref !== correctAnswer);
             dummies = shuffleArray(dummies);
             
             for (let i = 0; i < 3; i++) {
-                // 選択肢が重複しないようにチェック
                 if (!options.includes(dummies[i])) {
                     options.push(dummies[i]);
-                } else {
-                    // 重複した場合は別のダミーを探す（十分にダミーがあれば問題ないが念のため）
-                    let k = i;
-                    while(options.includes(dummies[k]) && k < dummies.length) {
-                        k++;
-                    }
-                    if (k < dummies.length) {
-                        options.push(dummies[k]);
-                    }
                 }
             }
-            // 選択肢の数が4つに満たない場合は、さらにランダムな都道府県を追加
+            
             while(options.length < 4) {
                 const randomPref = allPrefectures[Math.floor(Math.random() * allPrefectures.length)];
                 if (!options.includes(randomPref)) {
@@ -365,9 +275,7 @@
             return shuffleArray(options);
         }
 
-        // 回答をチェック
         function checkAnswer(selectedOption, button) {
-            // 他のボタンをクリックできないようにする
             const optionButtons = document.querySelectorAll('.option');
             optionButtons.forEach(btn => btn.disabled = true);
 
@@ -380,26 +288,21 @@
                 feedbackEl.textContent = `不正解... 正解は ${currentCorrectAnswer}`;
                 feedbackEl.style.color = '#f44336';
                 button.classList.add('incorrect');
-                // 正解の選択肢をハイライト
                 optionButtons.forEach(btn => {
                     if (btn.textContent === currentCorrectAnswer) {
                         btn.classList.add('correct');
                     }
                 });
             }
-
-            // 1.5秒後に次の問題へ
             setTimeout(nextQuestion, 1500);
         }
 
-        // 結果表示
         function showResult() {
             quizScreen.style.display = 'none';
             resultScreen.style.display = 'block';
             scoreEl.textContent = `${score} / ${totalQuestions}点`;
         }
         
-        // 配列をシャッフルするヘルパー関数
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -407,7 +310,6 @@
             }
             return array;
         }
-
     });
     </script>
 </body>
