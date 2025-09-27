@@ -25,20 +25,29 @@
             width: 90%;
             max-width: 500px;
         }
+        
+        /* 画面切り替えの基本スタイル */
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
 
-        h1 {
+        h1, h2 {
             color: #1a237e;
             margin-top: 0;
         }
 
-        #start-screen p {
+        p {
             font-size: 1.1em;
-            margin-bottom: 2em;
+            line-height: 1.6;
         }
 
         .btn {
             display: inline-block;
             padding: 12px 30px;
+            margin: 0.5em;
             font-size: 1.2em;
             font-weight: bold;
             color: #fff;
@@ -49,15 +58,17 @@
             transition: background-color 0.3s, transform 0.2s;
             text-decoration: none;
         }
-
         .btn:hover:not(:disabled) {
             background-color: #1565c0;
             transform: translateY(-2px);
         }
-
-        #quiz-screen {
-            display: none;
+        .btn-secondary {
+            background-color: #6c757d;
         }
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #5a6268;
+        }
+
 
         .diamond-display {
             width: 150px;
@@ -101,29 +112,44 @@
             opacity: 0.6;
         }
 
-        .option.correct {
+        .option.correct, .correct {
             background-color: #c8e6c9;
             border-color: #81c784;
             color: #2e7d32;
             font-weight: bold;
         }
 
-        .option.incorrect {
+        .option.incorrect, .incorrect {
             background-color: #ffcdd2;
             border-color: #e57373;
             color: #c62828;
             font-weight: bold;
         }
+        
+        /* 記述式クイズ用スタイル */
+        #answer-input {
+            width: 80%;
+            padding: 12px;
+            font-size: 1.1em;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            margin-top: 1.5em;
+            text-align: center;
+        }
+        #answer-input:focus {
+            outline: none;
+            border-color: #1e88e5;
+        }
+        #submit-answer {
+            margin-top: 1em;
+        }
+        
 
         #feedback {
             font-size: 1.5em;
             font-weight: bold;
             margin-top: 1em;
-            height: 30px;
-        }
-
-        #result-screen {
-            display: none;
+            height: 30px; /* 高さを固定してレイアウトのガタつきを防ぐ */
         }
         
         #score {
@@ -137,26 +163,34 @@
 <body>
 
     <div class="container">
-        <div id="start-screen">
+        <div id="home-screen" class="screen active">
             <h1>ダイヤマーク練習用</h1>
-            <p>都道府県のダイヤマークを当てるクイズです。<br>全10問、がんばってください！</p>
-            <button id="start-button" class="btn">開始</button>
+            <p>クイズのモードを選んでください。</p>
+            <button id="choice-quiz-btn" class="btn">4択クイズ</button>
+            <button id="typing-quiz-btn" class="btn">記述クイズ</button>
         </div>
 
-        <div id="quiz-screen">
+        <div id="quiz-screen" class="screen">
             <h2 id="question-number"></h2>
             <div class="diamond-display">
                 <img id="diamond-image" src="" alt="ダイヤマーク">
             </div>
-            <div id="options"></div>
+            <div id="options-container">
+                <div id="options"></div>
+            </div>
+            <div id="typing-container">
+                <input type="text" id="answer-input" placeholder="都道府県名を入力">
+                <button id="submit-answer" class="btn">回答する</button>
+            </div>
             <div id="feedback"></div>
         </div>
 
-        <div id="result-screen">
+        <div id="result-screen" class="screen">
             <h1>結果発表</h1>
             <p>あなたのスコアは...</p>
             <div id="score"></div>
             <button id="retry-button" class="btn">もう一度挑戦する</button>
+            <button id="home-button" class="btn btn-secondary">ホームに戻る</button>
         </div>
     </div>
 
@@ -188,38 +222,76 @@
 
         const allPrefectures = Array.from(new Set(quizData.flatMap(item => item.prefs)));
 
-        const startScreen = document.getElementById('start-screen');
+        // DOM要素
+        const screens = document.querySelectorAll('.screen');
+        const homeScreen = document.getElementById('home-screen');
         const quizScreen = document.getElementById('quiz-screen');
         const resultScreen = document.getElementById('result-screen');
-        const startButton = document.getElementById('start-button');
+        
+        const choiceQuizBtn = document.getElementById('choice-quiz-btn');
+        const typingQuizBtn = document.getElementById('typing-quiz-btn');
         const retryButton = document.getElementById('retry-button');
+        const homeButton = document.getElementById('home-button');
+        
         const questionNumberEl = document.getElementById('question-number');
         const diamondImageEl = document.getElementById('diamond-image'); 
+        const optionsContainer = document.getElementById('options-container');
         const optionsEl = document.getElementById('options');
+        const typingContainer = document.getElementById('typing-container');
+        const answerInput = document.getElementById('answer-input');
+        const submitAnswerBtn = document.getElementById('submit-answer');
         const feedbackEl = document.getElementById('feedback');
         const scoreEl = document.getElementById('score');
 
+        // クイズの状態
         let score = 0;
         let currentQuestionIndex = 0;
         const totalQuestions = 10;
         let availableQuestions = [];
-        let currentCorrectAnswer = '';
+        let currentCorrectGroup = []; // 正解のグループ (e.g., ['宮城県', '京都府', ...])
+        let quizMode = ''; // 'choice' or 'typing'
 
-        startButton.addEventListener('click', startQuiz);
-        retryButton.addEventListener('click', startQuiz);
+        // イベントリスナー
+        choiceQuizBtn.addEventListener('click', () => startQuiz('choice'));
+        typingQuizBtn.addEventListener('click', () => startQuiz('typing'));
+        retryButton.addEventListener('click', () => startQuiz(quizMode));
+        homeButton.addEventListener('click', showHomeScreen);
+        submitAnswerBtn.addEventListener('click', checkTypingAnswer);
+        answerInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') checkTypingAnswer();
+        });
 
-        function startQuiz() {
+        // 画面切り替え関数
+        function switchScreen(screenId) {
+            screens.forEach(screen => screen.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+        
+        function showHomeScreen() {
+            switchScreen('home-screen');
+        }
+
+        // クイズ開始
+        function startQuiz(mode) {
+            quizMode = mode;
             score = 0;
             currentQuestionIndex = 0;
             availableQuestions = shuffleArray([...quizData]);
             
-            startScreen.style.display = 'none';
-            resultScreen.style.display = 'none';
-            quizScreen.style.display = 'block';
+            // モードに応じてUIを切り替え
+            if (quizMode === 'choice') {
+                optionsContainer.style.display = 'block';
+                typingContainer.style.display = 'none';
+            } else { // typing
+                optionsContainer.style.display = 'none';
+                typingContainer.style.display = 'block';
+            }
 
+            switchScreen('quiz-screen');
             nextQuestion();
         }
 
+        // 次の問題へ
         function nextQuestion() {
             if (currentQuestionIndex >= totalQuestions) {
                 showResult();
@@ -228,72 +300,102 @@
             
             currentQuestionIndex++;
             feedbackEl.textContent = '';
-            optionsEl.innerHTML = '';
-
+            
             const questionData = availableQuestions.pop();
-            currentCorrectAnswer = questionData.prefs[Math.floor(Math.random() * questionData.prefs.length)];
+            currentCorrectGroup = questionData.prefs; // 正解グループを保存
             
             diamondImageEl.src = questionData.imageUrl;
             questionNumberEl.textContent = `第${currentQuestionIndex}問`;
-            
-            // ▼▼▼ 修正点 ▼▼▼
-            // questionData.prefs (現在の問題の正解グループ) を渡して選択肢を生成
-            const options = generateOptions(currentCorrectAnswer, questionData.prefs);
-            options.forEach(option => {
-                const button = document.createElement('button');
-                button.textContent = option;
-                button.classList.add('option');
-                button.addEventListener('click', () => checkAnswer(option, button));
-                optionsEl.appendChild(button);
-            });
+
+            if (quizMode === 'choice') {
+                optionsEl.innerHTML = '';
+                const correctAnswer = currentCorrectGroup[Math.floor(Math.random() * currentCorrectGroup.length)];
+                const options = generateChoiceOptions(correctAnswer, currentCorrectGroup);
+                options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.classList.add('option');
+                    button.addEventListener('click', () => checkChoiceAnswer(option, correctAnswer, button));
+                    optionsEl.appendChild(button);
+                });
+            } else { // typing
+                answerInput.value = '';
+                answerInput.disabled = false;
+                submitAnswerBtn.disabled = false;
+                answerInput.focus();
+            }
         }
         
-        // ▼▼▼ 修正点 ▼▼▼
-        // 選択肢を生成する関数を修正
-        function generateOptions(correctAnswer, correctGroup) {
+        // 4択クイズの選択肢を生成
+        function generateChoiceOptions(correctAnswer, correctGroup) {
             let options = [correctAnswer];
-            
-            // ダミーの選択肢を「正解グループに含まれない」都道府県からのみ選ぶ
             let dummies = allPrefectures.filter(pref => !correctGroup.includes(pref));
             dummies = shuffleArray(dummies);
-            
-            // ダミーを3つ追加する
             for (let i = 0; i < 3; i++) {
                 options.push(dummies[i]);
             }
-            
-            // 最終的な選択肢（正解1+不正解3）をシャッフルして返す
             return shuffleArray(options);
         }
 
-        function checkAnswer(selectedOption, button) {
+        // 4択クイズの回答をチェック
+        function checkChoiceAnswer(selectedOption, correctAnswer, button) {
             const optionButtons = document.querySelectorAll('.option');
             optionButtons.forEach(btn => btn.disabled = true);
 
-            if (selectedOption === currentCorrectAnswer) {
+            if (selectedOption === correctAnswer) {
                 feedbackEl.textContent = '正解！';
                 feedbackEl.style.color = '#4caf50';
                 button.classList.add('correct');
                 score++;
             } else {
-                feedbackEl.textContent = `不正解... 正解は ${currentCorrectAnswer}`;
+                feedbackEl.textContent = `不正解... 正解は ${correctAnswer}`;
                 feedbackEl.style.color = '#f44336';
                 button.classList.add('incorrect');
                 optionButtons.forEach(btn => {
-                    if (btn.textContent === currentCorrectAnswer) {
-                        btn.classList.add('correct');
-                    }
+                    if (btn.textContent === correctAnswer) btn.classList.add('correct');
                 });
             }
             setTimeout(nextQuestion, 1500);
         }
 
+        // 記述クイズの回答をチェック
+        function checkTypingAnswer() {
+            const userInput = answerInput.value.trim();
+            if (!userInput) return; // 空欄の場合は何もしない
+
+            answerInput.disabled = true;
+            submitAnswerBtn.disabled = true;
+
+            // 「県」「府」「都」「道」を許容する正規化
+            const normalizedInput = userInput.replace(/（|）|\s/g, '').replace(/県|府|都|道$/, '');
+            const normalizedAnswers = currentCorrectGroup.map(pref => pref.replace(/県|府|都|道$/, ''));
+            
+            if (normalizedAnswers.includes(normalizedInput)) {
+                score++;
+                feedbackEl.textContent = '正解！';
+                feedbackEl.style.color = '#4caf50';
+                answerInput.classList.add('correct');
+                answerInput.classList.remove('incorrect');
+            } else {
+                feedbackEl.textContent = `不正解... 正解は ${currentCorrectGroup.join('、')}`;
+                feedbackEl.style.color = '#f44336';
+                answerInput.classList.add('incorrect');
+                answerInput.classList.remove('correct');
+            }
+            setTimeout(() => {
+                answerInput.classList.remove('correct', 'incorrect');
+                nextQuestion();
+            }, 2000); // 記述式は少し長めに表示
+        }
+
+
+        // 結果表示
         function showResult() {
-            quizScreen.style.display = 'none';
-            resultScreen.style.display = 'block';
+            switchScreen('result-screen');
             scoreEl.textContent = `${score} / ${totalQuestions}点`;
         }
         
+        // 配列シャッフル関数
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
