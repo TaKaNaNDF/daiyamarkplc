@@ -93,14 +93,12 @@
             font-size: 1.2em; color: #333; border-bottom: 2px solid #1e88e5;
             padding-bottom: 0.5em; margin-bottom: 1em;
         }
-        /* ▼▼ スマホでのスクロール対応 ▼▼ */
         #incorrect-list {
             max-height: 250px;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* iOSでのスムーズなスクロール */
+            -webkit-overflow-scrolling: touch;
             padding-right: 10px;
         }
-        /* ▲▲ スマホでのスクロール対応 ▲▲ */
         .incorrect-item {
             display: flex; align-items: center; margin-bottom: 1em; padding: 10px;
             background-color: #f9f9f9; border-radius: 8px; border: 1px solid #ddd;
@@ -123,7 +121,7 @@
 
         <div id="quiz-screen" class="screen">
             <h2 id="question-number"></h2>
-            <div id="question-instruction"></div>
+            <div id="question-instruction" style="font-size: 0.9em; color: #555; min-height: 20px;"></div>
             <div class="diamond-display">
                 <img id="diamond-image" src="" alt="ダイヤマーク">
             </div>
@@ -174,9 +172,9 @@
                 { id: 17, prefs: ['長野県', '山口県', '愛知県', '鹿児島県'], imageUrl: 'https://raw.githubusercontent.com/TaKaNaNDF/daiyamarkplc/main/daiya17.png' },
             ];
 
+            // ... (DOM要素取得のコードは変更なし)
             const allPrefectures = Array.from(new Set(quizData.flatMap(item => item.prefs)));
             const screens = document.querySelectorAll('.screen');
-            // ... (DOM要素の取得)
             const choiceQuizBtn = document.getElementById('choice-quiz-btn');
             const typingQuizBtn = document.getElementById('typing-quiz-btn');
             const typingAllQuizBtn = document.getElementById('typing-all-quiz-btn');
@@ -184,7 +182,6 @@
             const retryIncorrectBtn = document.getElementById('retry-incorrect-btn');
             const homeButton = document.getElementById('home-button');
             const questionInstructionEl = document.getElementById('question-instruction');
-            //...(その他DOM要素)
             const questionNumberEl = document.getElementById('question-number');
             const diamondImageEl = document.getElementById('diamond-image');
             const optionsContainer = document.getElementById('options-container');
@@ -197,6 +194,7 @@
             const incorrectListEl = document.getElementById('incorrect-list');
             const incorrectReviewContainer = document.getElementById('incorrect-review-container');
 
+
             let score = 0, currentQuestionIndex = 0, totalQuestions = 10;
             let availableQuestions = [], incorrectQuestions = [];
             let currentQuestionData = null, currentCorrectGroup = [];
@@ -205,8 +203,15 @@
             // イベントリスナー
             choiceQuizBtn.addEventListener('click', () => startQuiz('choice', shuffleArray([...quizData]), 10));
             typingQuizBtn.addEventListener('click', () => startQuiz('typing', shuffleArray([...quizData]), 10));
-            typingAllQuizBtn.addEventListener('click', () => startQuiz('typing-all', shuffleArray([...quizData]), 10));
-            retryButton.addEventListener('click', () => startQuiz(originalQuizMode, shuffleArray([...quizData]), 10));
+            typingAllQuizBtn.addEventListener('click', () => {
+                const allAnswerQuestions = quizData.filter(q => q.id !== 0);
+                startQuiz('typing-all', shuffleArray(allAnswerQuestions), allAnswerQuestions.length);
+            });
+            retryButton.addEventListener('click', () => {
+                 const questionsForRetry = originalQuizMode === 'typing-all' ? quizData.filter(q => q.id !== 0) : [...quizData];
+                 const numQuestions = originalQuizMode === 'typing-all' ? questionsForRetry.length : 10;
+                 startQuiz(originalQuizMode, shuffleArray(questionsForRetry), numQuestions);
+            });
             retryIncorrectBtn.addEventListener('click', () => startQuiz(originalQuizMode, shuffleArray([...incorrectQuestions]), incorrectQuestions.length));
             homeButton.addEventListener('click', () => switchScreen('home-screen'));
             submitAnswerBtn.addEventListener('click', checkTypingAnswer);
@@ -219,7 +224,9 @@
 
             function startQuiz(mode, questions, numQuestions) {
                 quizMode = mode;
-                if (mode !== 'review') originalQuizMode = mode;
+                if (!mode.includes('review')) {
+                    originalQuizMode = mode;
+                }
                 score = 0;
                 currentQuestionIndex = 0;
                 availableQuestions = questions;
@@ -243,12 +250,20 @@
                 feedbackEl.innerHTML = '';
                 currentQuestionData = availableQuestions.pop();
                 currentCorrectGroup = currentQuestionData.prefs;
-
                 diamondImageEl.src = currentQuestionData.imageUrl;
                 questionNumberEl.textContent = `第${currentQuestionIndex}問 / 全${totalQuestions}問`;
 
                 if (quizMode === 'choice') {
-                    // ... (4択のロジックは変更なし)
+                    optionsEl.innerHTML = '';
+                    const correctAnswer = currentCorrectGroup[Math.floor(Math.random() * currentCorrectGroup.length)];
+                    const options = generateChoiceOptions(correctAnswer, currentCorrectGroup);
+                    options.forEach(option => {
+                        const button = document.createElement('button');
+                        button.textContent = option;
+                        button.classList.add('option');
+                        button.addEventListener('click', () => checkChoiceAnswer(option, button));
+                        optionsEl.appendChild(button);
+                    });
                 } else {
                     answerInput.value = '';
                     answerInput.disabled = false;
@@ -256,8 +271,39 @@
                     answerInput.focus();
                 }
             }
-            
-            // ... (generateChoiceOptions, checkChoiceAnswerは変更なし)
+
+            function generateChoiceOptions(correctAnswer, correctGroup) {
+                let options = [correctAnswer];
+                let dummies = allPrefectures.filter(pref => !correctGroup.includes(pref));
+                dummies = shuffleArray(dummies);
+                for (let i = 0; i < 3 && i < dummies.length; i++) {
+                    options.push(dummies[i]);
+                }
+                return shuffleArray(options);
+            }
+
+            function checkChoiceAnswer(selectedOption, button) {
+                const optionButtons = document.querySelectorAll('.option');
+                optionButtons.forEach(btn => btn.disabled = true);
+                const isCorrect = currentCorrectGroup.includes(selectedOption);
+                const answerText = `正解は: ${currentCorrectGroup.join('、')}`;
+                
+                if (isCorrect) {
+                    score++;
+                    feedbackEl.innerHTML = `正解！<br>${answerText}`;
+                    feedbackEl.style.color = '#4caf50';
+                    button.classList.add('correct');
+                } else {
+                    incorrectQuestions.push(currentQuestionData);
+                    feedbackEl.innerHTML = `不正解...<br>${answerText}`;
+                    feedbackEl.style.color = '#f44336';
+                    button.classList.add('incorrect');
+                    optionButtons.forEach(btn => {
+                        if (currentCorrectGroup.includes(btn.textContent)) btn.classList.add('correct');
+                    });
+                }
+                setTimeout(nextQuestion, 2500);
+            }
 
             function checkTypingAnswer() {
                 const userInput = answerInput.value.trim();
@@ -265,23 +311,26 @@
                 answerInput.disabled = true;
                 submitAnswerBtn.disabled = true;
 
+                // ▼▼▼【今回の修正箇所】▼▼▼
+                // 都道府県名を正しく単純化（正規化）する関数
+                const normalize = (pref) => {
+                    if (pref === '北海道') {
+                        return '北海道'; // 北海道は特別扱い
+                    }
+                    // 末尾の「都」「府」「県」のみを削除
+                    return pref.replace(/(都|府|県)$/, '');
+                };
+                // ▲▲▲【今回の修正箇所】▲▲▲
+
                 let isCorrect = false;
-                const normalize = (str) => str.replace(/(県|府|都|道)$/, '');
 
                 if (quizMode === 'typing-all') {
-                    const userAnswers = userInput.split(/\s+/).map(normalize).sort();
+                    const userAnswers = userInput.split(/\s+/).map(normalize).filter(Boolean).sort();
                     const correctAnswers = currentCorrectGroup.map(normalize).sort();
                     isCorrect = userAnswers.length === correctAnswers.length && userAnswers.every((val, index) => val === correctAnswers[index]);
-                } else { // 通常の記述モード
+                } else {
                     const normalizedInput = normalize(userInput.replace(/（|）|\s/g, ''));
                     const normalizedAnswers = currentCorrectGroup.map(normalize);
-
-                    // ---▼▼ デバッグ用ログ ▼▼---
-                    console.log("入力:", userInput, " | 正規化された入力:", normalizedInput);
-                    console.log("正解リスト:", currentCorrectGroup, " | 正規化された正解リスト:", normalizedAnswers);
-                    console.log("判定:", normalizedAnswers.includes(normalizedInput) ? "〇" : "×");
-                    // ---▲▲ デバッグ用ログ ▲▲---
-
                     isCorrect = normalizedAnswers.includes(normalizedInput);
                 }
 
@@ -311,7 +360,7 @@
                 incorrectListEl.innerHTML = '';
                 if (incorrectQuestions.length > 0) {
                     incorrectReviewContainer.style.display = 'block';
-                    incorrectQuestions.forEach(item => {
+                    [...incorrectQuestions].reverse().forEach(item => {
                         const itemEl = document.createElement('div');
                         itemEl.classList.add('incorrect-item');
                         itemEl.innerHTML = `<img src="${item.imageUrl}" alt="ダイヤマーク"><div class="incorrect-item-answer">${item.prefs.join('、')}</div>`;
