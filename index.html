@@ -438,11 +438,10 @@
                 answerInput.disabled = true;
                 submitAnswerBtn.disabled = true;
 
-                // ▼▼▼【今回の修正箇所】▼▼▼
-                // 入力と正解から「県」「府」「都」「道」を取り除いてから比較する
+                // ユーザーの入力と正解リストの両方から末尾の「県」「府」「都」「道」を削除して比較します
+                // これにより「京都」と入力しても「京都府」が正解になります
                 const normalizedInput = userInput.replace(/（|）|\s/g, '').replace(/(県|府|都|道)$/, '');
                 const normalizedAnswers = currentCorrectGroup.map(pref => pref.replace(/(県|府|都|道)$/, ''));
-                // ▲▲▲【今回の修正箇所】▲▲▲
                 
                 const answerText = `正解は: ${currentCorrectGroup.join('、')}`;
 
